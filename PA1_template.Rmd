@@ -4,22 +4,46 @@ output:
   html_document:
     keep_md: true
 ---
-
+## Load libraries
+library(plyr) # for ddply
+library(ggplot2)
 
 ## Loading and preprocessing the data
-
-
+myData <- read.csv("activity.csv")
 
 ## What is mean total number of steps taken per day?
+dailySteps_total <- ddply(myData, "date", summarise, TotalSteps = sum(steps, na.rm = TRUE))
+ggplot(dailySteps_total, aes(x = TotalSteps)) + geom_histogram(binwidth = 2000)
+# Not this, a bar graph but not a histogram os the data: ggplot(dailySteps_total, aes(x = date, y = TotalSteps)) + geom_bar(stat = "identity")
 
-
+# Calculate mean and median of the total number os steps taken per day
+mean(dailySteps_total$TotalSteps)
+median(dailySteps_total$TotalSteps)
 
 ## What is the average daily activity pattern?
-
-
+# Interval means plot
+intervalMean <- ddply(myData, "interval", summarise, mean = mean(steps, na.rm = TRUE))
+plot(intervalMean$interval, intervalMean$Mean, type = "l", xlab = "Interval", ylab = "Steps mean", col = "blue")
+# Max mean interval
+maxInt_mean <- max(intervalMean$mean)
+maxInt_interval <- which(intervalMean$mean == maxInt_mean)
+maxInterval <- c(Interval = maxInt_interval, Mean = maxInt_mean)
+maxInterval
 
 ## Imputing missing values
-
-
+naCheck <- is.na(myData$steps)
+# Number of missing values
+table(naCheck)
+# Fill in missing values with 5-minute interval mean
+myData_adapted <- myData
+myData_adapted = transform(myData_adapted, steps = ifelse(is.na(steps), mean(myData[myData$interval == interval, "steps"], na.rm = TRUE), steps))
+# Plot a histogram of the total number of steps taken each day
+dailySteps_total_adapted <- ddply(myData_adapted, "date", summarise, TotalSteps = sum(steps, na.rm = TRUE))
+ggplot(dailySteps_total_adapted, aes(x = TotalSteps)) + geom_histogram(binwidth = 2000)
+# Calculate mean and median of the total number os steps taken per day
+mean(dailySteps_total_adapted$TotalSteps, na.rm = TRUE)
+median(dailySteps_total_adapted$TotalSteps, na.rm = TRUE)
 
 ## Are there differences in activity patterns between weekdays and weekends?
+myData_adapted = transform(myData_adapted, dayType = ifelse(grepl("sáb|dom", weekdays(as.Date(date), abbr = TRUE)), "weekend", "weekday"))
+
