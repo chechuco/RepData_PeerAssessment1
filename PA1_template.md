@@ -47,7 +47,7 @@ We are interest in the dalily activity pattern, so we calculate the average numb
 ```r
 # Interval means plot
 intervalMean <- ddply(myData, "interval", summarise, mean = mean(steps, na.rm = TRUE))
-plot(intervalMean$interval, intervalMean$Mean, type = "l", xlab = "Interval", ylab = "Steps mean", col = "blue")
+plot(intervalMean, type = "l",col = "blue")
 ```
 
 ![](PA1_template_files/figure-html/intervalPlot-1.png) 
@@ -85,7 +85,7 @@ Now, we´ll fill in missing values with 5-minute interval mean, and repeat the p
 myData_adapted <- myData
 myData_adapted = transform(myData_adapted, steps = ifelse(is.na(steps), mean(myData[myData$interval == interval, "steps"], na.rm = TRUE), steps))
 ```
-Plotting the total steps taken every day:
+Plotting the total steps taken every day; the low-number data disappear:
 
 ```r
 # Plot a histogram of the total number of steps taken each day
@@ -94,7 +94,7 @@ ggplot(dailySteps_total_adapted, aes(x = TotalSteps)) + geom_histogram(binwidth 
 ```
 
 ![](PA1_template_files/figure-html/totalPlot2-1.png) 
-The mean and median of the total number os steps taken per day arte greater than that we get before:
+The mean and median of the total number os steps taken per day are greater than the ones we get before:
 
 ```r
 me2 <- mean(dailySteps_total_adapted$TotalSteps, na.rm = TRUE)
@@ -108,5 +108,15 @@ mm2
 ## 10766.19 10766.19
 ```
 ## Are there differences in activity patterns between weekdays and weekends?
-myData_adapted = transform(myData_adapted, dayType = ifelse(grepl("sáb|dom", weekdays(as.Date(date), abbr = TRUE)), "weekend", "weekday"))
+Finally, we plot the averages in every 5-minute interval, across the 61 days, and plot the data, for weekdays and weekends: 
 
+```r
+myData_adapted = transform(myData_adapted, dayType = ifelse(grepl("sáb|dom", weekdays(as.Date(date), abbr = TRUE)), "weekend", "weekday"))
+intervalMean_wd <- ddply(myData_adapted[myData_adapted$dayType == "weekday",], "interval", summarise, mean = mean(steps, na.rm = TRUE))
+intervalMean_wd = transform(intervalMean_wd, daytype = "weekday")
+intervalMean_we <- ddply(myData_adapted[myData_adapted$dayType == "weekend",], "interval", summarise, mean = mean(steps, na.rm = TRUE))
+intervalMean_we = transform(intervalMean_we, daytype = "weekend")
+intervalMean_all <- data.frame()
+intervalMean_all <- rbind(intervalMean_wd, intervalMean_we)
+f <- factor(intervalMean_all$daytype)
+```
